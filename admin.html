@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>StayWise | Admin Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to right, #4e73df, #1cc88a);
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 40px;
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+nav h2 {
+    margin: 0;
+    color: #4e73df;
+}
+
+.dashboard {
+    padding: 30px;
+}
+
+button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 20px;
+    background-color: #4e73df;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #2e59d9;
+}
+
+/* Table */
+.table-container {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th, table td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+}
+
+table th {
+    background-color: #4e73df;
+    color: white;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 350px;
+}
+
+.modal-content input, 
+.modal-content textarea {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+}
+
+.modal-content textarea {
+    resize: none;
+    height: 70px;
+}
+
+.actions button {
+    margin: 2px;
+    font-size: 12px;
+}
+
+.delete-btn {
+    background-color: crimson;
+}
+
+</style>
+</head>
+
+<body>
+
+<nav>
+    <h2>StayWise Admin</h2>
+    <button onclick="openModal()">+ Add Hotel</button>
+</nav>
+
+<div class="dashboard">
+<!-- Statistics --> <div class="stats"> <div class="card">
+ <h3>Total Users</h3> <p>1,245</p> </div> <div class="card">
+ <h3>Total Views</h3> <p>8,932</p> 
+ </div>
+ <div class="card"> <h3>Total Searches</h3> <p>3,421</p> </div> 
+ <div class="card">
+ <h3>Total Reviews</h3> <p>587</p> </div> </div>
+ <!-- Hotel Table --> 
+ <div class="table-container"> <h3>Hotels Overview</h3> 
+ <table> <tr> <th>Hotel</th> <th>Stars ⭐</th> 
+ <th>Comments</th> <th>Views</th> </tr> <tr> 
+ <td>Blue Ocean Hotel</td> <td>4 ⭐</td>
+ <td>120</td> <td>980</td> </tr> <tr>
+ <td>Sunrise Resort</td> <td>5 ⭐</td> <td>210</td> 
+ <td>1,430</td> </tr> <tr> <td>City Light Inn</td>
+ <td>3 ⭐</td>
+ <td>85</td> <td>560</td> </tr> </table> 
+ </div>
+ <!-- Recent Searches -->
+ <div class="searches">
+ <h3>Latest Searches</h3> <ul>
+ <li>Paris – 5 Stars – Under $200</li> 
+ <li>Bangkok – City Center</li>
+ <li>Dubai – Beach Hotel</li>
+ <li>Rome – Budget Hotel</li> </ul>
+ </div>
+ </div>
+
+<div class="table-container">
+    <h3>Hotels Management</h3>
+    <table id="hotelTable">
+        <tr>
+            <th>Image</th>
+            <th>Price</th>
+            <th>Description</th>
+            <th>Actions</th>
+        </tr>
+    </table>
+</div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal" id="hotelModal">
+    <div class="modal-content">
+        <h3>Add / Edit Hotel</h3>
+        <input type="file" id="image" placeholder="image">
+        <input type="text" id="price" placeholder="Price">
+        <textarea id="description" placeholder="Description"></textarea>
+        <button onclick="saveHotel()">Save</button>
+        <button onclick="closeModal()">Cancel</button>
+    </div>
+</div>
+
+<script>
+
+let editRow = null;
+
+function openModal() {
+    document.getElementById("hotelModal").style.display = "flex";
+}
+
+function closeModal() {
+    document.getElementById("hotelModal").style.display = "none";
+    clearForm();
+}
+
+function clearForm() {
+    document.getElementById("image").value = "";
+    document.getElementById("price").value = "";
+    document.getElementById("description").value = "";
+    editRow = null;
+}
+
+function saveHotel() {
+
+    const image = document.getElementById("image").value;
+    const price = document.getElementById("price").value;
+    const description = document.getElementById("description").value;
+
+    if (!image || !price || !description) {
+        alert("Please fill all fields");
+        return;
+    }
+
+    if (editRow) {
+        editRow.cells[0].innerHTML = `<img src="${image}" width="60">`;
+        editRow.cells[1].innerText = price;
+        editRow.cells[2].innerText = description;
+    } else {
+        const table = document.getElementById("hotelTable");
+        const row = table.insertRow();
+
+        row.insertCell(0).innerHTML = `<img src="${image}" width="60">`;
+        row.insertCell(1).innerText = price;
+        row.insertCell(2).innerText = description;
+        row.insertCell(3).innerHTML = `
+            <div class="actions">
+                <button onclick="editHotel(this)">Edit</button>
+                <button class="delete-btn" onclick="deleteHotel(this)">Delete</button>
+            </div>
+        `;
+    }
+
+    closeModal();
+}
+
+function deleteHotel(btn) {
+    const row = btn.parentElement.parentElement.parentElement;
+    row.remove();
+}
+
+function editHotel(btn) {
+    editRow = btn.parentElement.parentElement.parentElement;
+
+    document.getElementById("image").value =
+        editRow.cells[0].querySelector("img").src;
+    document.getElementById("price").value =
+        editRow.cells[1].innerText;
+    document.getElementById("description").value =
+        editRow.cells[2].innerText;
+
+    openModal();
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>StayWise | Travel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background: linear-gradient(to right, #4e73df, #1cc88a);
+}
+
+nav{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px 40px;
+    background:white;
+}
+
+nav h2{
+    color:#4e73df;
+    margin:0;
+}
+
+.search-section{
+    text-align:center;
+    padding:30px;
+}
+
+.search-section input{
+    padding:10px;
+    width:40%;
+    border-radius:20px;
+    border:none;
+}
+
+.filter-card{
+    background:white;
+    width:80%;
+    margin:20px auto;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.2);
+    display:flex;
+    flex-wrap:wrap;
+    gap:15px;
+    justify-content:center;
+}
+
+.filter-card input,
+.filter-card select{
+    padding:8px;
+}
+
+.filter-card button{
+    padding:8px 15px;
+    border:none;
+    border-radius:20px;
+    background:#4e73df;
+    color:white;
+    cursor:pointer;
+}
+
+.hotels{
+    width:85%;
+    margin:20px auto;
+}
+
+.hotel{
+    background:white;
+    padding:15px;
+    margin-bottom:20px;
+    border-radius:12px;
+    box-shadow:0 6px 15px rgba(0,0,0,0.2);
+}
+
+.hotel img{
+    width:100%;
+    max-height:200px;
+    object-fit:cover;
+    border-radius:10px;
+}
+
+.hotel button{
+    padding:8px 15px;
+    border:none;
+    border-radius:20px;
+    background:#1cc88a;
+    color:white;
+    cursor:pointer;
+    margin-bottom:10px;
+}
+
+.review-section{
+    margin-top:15px;
+    padding-top:10px;
+    border-top:1px solid #ddd;
+}
+
+.review-section textarea{
+    width:100%;
+    height:60px;
+    margin-top:8px;
+    padding:5px;
+    border-radius:8px;
+}
+
+.review-section button{
+    margin-top:8px;
+    background:#4e73df;
+    color:white;
+    border:none;
+    padding:6px 12px;
+    border-radius:15px;
+    cursor:pointer;
+}
+
+.star-rating span{
+    font-size:22px;
+    cursor:pointer;
+    color:gray;
+}
+
+.star-rating span.active{
+    color:gold;
+}
+
+.comments{
+    margin-top:10px;
+    font-size:14px;
+}
+
+.modal{
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.6);
+    justify-content:center;
+    align-items:center;
+}
+
+.modal-content{
+    background:white;
+    padding:25px;
+    border-radius:15px;
+    width:350px;
+    text-align:center;
+}
+
+.modal-content input{
+    width:90%;
+    padding:8px;
+    margin:8px 0;
+}
+
+.modal-content button{
+    padding:8px 15px;
+    margin:5px;
+    border:none;
+    border-radius:20px;
+    cursor:pointer;
+}
+
+.confirm{
+    background:#1cc88a;
+    color:white;
+}
+
+.cancel{
+    background:#e74a3b;
+    color:white;
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+    <h2>StayWise Travel</h2>
+</nav>
+
+<div class="hotels" id="hotelList"></div>
+
+<!-- Modal -->
+<div class="modal" id="reserveModal">
+    <div class="modal-content">
+        <h3>Reservation</h3>
+
+        <form id="reserveForm">
+            <input type="text" id="hotelName" name="hotelName" readonly>
+            <input type="number" id="days" name="days" placeholder="Number of days" required oninput="updatePrice()">
+            <input type="number" id="persons" name="persons" placeholder="Number of persons" required oninput="updatePrice()">
+
+            <p id="totalPrice" style="font-weight:bold;"></p>
+            <input type="hidden" id="finalPrice" name="finalPrice">
+
+            <button type="button" class="cancel" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="confirm">Confirm</button>
+        </form>
+    </div>
+</div>
+
+<script>
+
+const hotels = [
+    {name:"Blue Ocean", city:"Paris", price:120, type:"luxe", stars:4, image:"https://picsum.photos/400/200?1"},
+    {name:"Budget Stay", city:"Rome", price:60, type:"economique", stars:3, image:"https://picsum.photos/400/200?2"},
+    {name:"Sun Resort", city:"Dubai", price:250, type:"luxe", stars:5, image:"https://picsum.photos/400/200?3"},
+];
+
+let currentPrice = 0;
+
+function displayHotels(list){
+    const container = document.getElementById("hotelList");
+    container.innerHTML="";
+
+    list.forEach((hotel,index)=>{
+        const div=document.createElement("div");
+        div.className="hotel";
+
+        div.innerHTML=`
+            <h3>${hotel.name}</h3>
+            <img src="${hotel.image}">
+            <p>City: ${hotel.city}</p>
+            <p>Price: $${hotel.price} / day</p>
+            <p>Type: ${hotel.type}</p>
+
+            <button onclick="openReserve('${hotel.name}', ${hotel.price})">Reserve</button>
+
+            <div class="review-section">
+                <div class="star-rating" id="stars-${index}">
+                    ${createStars(index)}
+                </div>
+
+                <textarea id="comment-${index}" placeholder="Write your comment..."></textarea>
+                <button onclick="addComment(${index})">Add Comment</button>
+
+                <div class="comments" id="comments-${index}"></div>
+            </div>
+        `;
+
+        container.appendChild(div);
+    });
+}
+
+function createStars(index){
+    let starsHTML="";
+    for(let i=1;i<=5;i++){
+        starsHTML+=`<span onclick="rateHotel(${index}, ${i})">★</span>`;
+    }
+    return starsHTML;
+}
+
+function rateHotel(index, rating){
+    const stars = document.querySelectorAll(`#stars-${index} span`);
+    stars.forEach((star, i)=>{
+        if(i < rating){
+            star.classList.add("active");
+        }else{
+            star.classList.remove("active");
+        }
+    });
+}
+
+function addComment(index){
+    const commentText = document.getElementById(`comment-${index}`).value;
+    const stars = document.querySelectorAll(`#stars-${index} span.active`).length;
+
+    if(commentText === ""){
+        alert("Please write a comment");
+        return;
+    }
+
+    const commentsDiv = document.getElementById(`comments-${index}`);
+
+    const newComment = document.createElement("div");
+    newComment.innerHTML = `
+        <p>
+        ${"★".repeat(stars)} (${stars}/5)<br>
+        ${commentText}
+        </p>
+        <hr>
+    `;
+
+    commentsDiv.appendChild(newComment);
+
+    document.getElementById(`comment-${index}`).value="";
+    document.querySelectorAll(`#stars-${index} span`).forEach(star=>star.classList.remove("active"));
+}
+
+function openReserve(name, price){
+    document.getElementById("reserveModal").style.display="flex";
+    document.getElementById("hotelName").value=name;
+    currentPrice = price;
+}
+
+function closeModal(){
+    document.getElementById("reserveModal").style.display="none";
+    document.getElementById("reserveForm").reset();
+    document.getElementById("totalPrice").innerText="";
+}
+
+function updatePrice(){
+    const days=document.getElementById("days").value;
+    const persons=document.getElementById("persons").value;
+
+    if(days && persons){
+        const total = currentPrice * days * persons;
+        document.getElementById("totalPrice").innerText = "Final Price: $" + total;
+        document.getElementById("finalPrice").value = total;
+    }
+}
+
+document.getElementById("reserveForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    alert("Votre réservation est terminée avec succès ✅");
+    closeModal();
+});
+
+displayHotels(hotels);
+
+</script>
+
+</body>
+</html>
